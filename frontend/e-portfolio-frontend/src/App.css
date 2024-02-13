@@ -1,38 +1,62 @@
-.App {
-  text-align: center;
+.scenario-input-container {
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.scenario-textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  resize: vertical;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.extract-button, .toggle-description-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 10px; /* Add some space between the button and the preceding text */
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.extract-button:disabled {
+  background-color: #ccc;
+}
+
+.toggle-description-button {
+  background-color: #007bff;
+}
+
+.error-message {
+  color: red;
+}
+
+.skills-container {
+  margin-top: 20px;
+}
+
+.skills-list {
   display: flex;
   flex-direction: column;
+  gap: 10px;
+}
+
+.skill-tag {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  justify-content: space-between;
+  padding: 5px 10px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.skill-description {
+  margin-top: 5px;
+  padding-left: 20px; /* Indent description for better readability */
 }
