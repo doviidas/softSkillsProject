@@ -3,7 +3,11 @@ import '../App.css'; // Ensure this path is correct
 
 function ScenarioInput() {
     const [scenario, setScenario] = useState('');
-    const [extractedSkills, setExtractedSkills] = useState([]);
+    const [extractedActivity, setExtractedActivity] = useState('');
+    const [extractedRole, setExtractedRole] = useState('');
+    const [activitySkills, setActivitySkills] = useState([]);
+    const [roleSkills, setRoleSkills] = useState([]);
+    const [skillDescriptions, setSkillDescriptions] = useState({});
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -11,9 +15,35 @@ function ScenarioInput() {
         setScenario(e.target.value);
     };
 
+    const fetchSkillDescription = async (skill) => {
+        try {
+            const url = `http://localhost:5000/get_skill_description?skill=${encodeURIComponent(skill)}`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log("Fetched description for skill", skill, ":", data.description); // Log the fetched description
+            
+            setSkillDescriptions(prevDescriptions => ({
+                ...prevDescriptions,
+                [skill]: {
+                    description: data.description || 'Description not available',
+                    visible: !prevDescriptions[skill]?.visible // Toggle visibility
+                }
+            }));
+        } catch (error) {
+            console.error('Error fetching skill description:', error);
+            setError(`Error fetching skill description: ${error.message}`);
+        }
+    };
+    
     const extractSkills = async () => {
         setLoading(true);
-        setError(''); // Clear previous errors
+        setError('');
+        
         try {
             const response = await fetch('http://localhost:5000/extract_skills', {
                 method: 'POST',
@@ -28,16 +58,10 @@ function ScenarioInput() {
             }
 
             const data = await response.json();
-            if (data.soft_skills_with_descriptions) {
-                // Map through the skills to add a 'visible' property for toggling description visibility
-                const skillsWithVisibility = data.soft_skills_with_descriptions.map(skill => ({
-                    ...skill,
-                    visible: false,
-                }));
-                setExtractedSkills(skillsWithVisibility);
-            } else {
-                setExtractedSkills([]); // Clear skills if none are received
-            }
+            setExtractedActivity(data.extracted_activity || '');
+            setExtractedRole(data.extracted_role || '');
+            setActivitySkills(data.activity_skills || []);
+            setRoleSkills(data.role_skills || []);
         } catch (error) {
             console.error('Error fetching data:', error);
             setError(`Error fetching data: ${error.message}`);
@@ -46,49 +70,63 @@ function ScenarioInput() {
         }
     };
 
-    const toggleDescriptionVisibility = (index) => {
-        // Toggle the 'visible' property of the skill at the given index
-        const updatedSkills = extractedSkills.map((skill, i) => {
-            if (i === index) {
-                return { ...skill, visible: !skill.visible };
-            }
-            return skill;
-        });
-        setExtractedSkills(updatedSkills);
-    };
-
     return (
         <div className="scenario-input-container">
-            <h2>Extract Soft Skills from Scenarios</h2>
-            <textarea
-                className="scenario-textarea"
+            <h2>Discover Your Soft Skills</h2>
+            <input
+                type="text"
+                className="scenario-text-input"
                 value={scenario}
                 onChange={handleScenarioChange}
-                placeholder="Enter a scenario..."
+                placeholder="Describe a scenario where you demonstrated your abilities..."
             />
             <br />
             <button className="extract-button" onClick={extractSkills} disabled={loading}>
-                {loading ? 'Extracting...' : 'Extract Skills'}
+                {loading ? 'Analyzing...' : 'Analyze Scenario'}
             </button>
-
             {error && <div className="error-message">{error}</div>}
-
-            {extractedSkills.length > 0 && (
-                <div className="skills-container">
-                    <h3>Extracted Skills:</h3>
-                    <ul>
-                        {extractedSkills.map((skillItem, index) => (
-                            <li key={index}>
-                                <strong>{skillItem.skill}:</strong>
-                                <button onClick={() => toggleDescriptionVisibility(index)}>
-                                    {skillItem.visible ? 'Hide Description' : 'Show Description'}
-                                </button>
-                                {skillItem.visible && <p>{skillItem.description || 'No description available'}</p>}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+            <div className="skills-output-container">
+                {extractedActivity && activitySkills.length > 0 && (
+                    <div className="skills-section">
+                        <h3>Based on your activity "{extractedActivity}", you may have these skills:</h3>
+                        <ul className="skills-list">
+                            {activitySkills.map((skill, index) => (
+                                <li key={`activity-skill-${index}`} className="skill-item">
+                                    <div className="skill-content">
+                                        <span>{skill}</span>
+                                        <button className="toggle-description-button" onClick={() => fetchSkillDescription(skill)}>
+                                            {skillDescriptions[skill]?.visible ? 'Show Less' : 'Show More'}
+                                        </button>
+                                    </div>
+                                    {skillDescriptions[skill]?.visible && (
+                                        <div className="skill-description">{skillDescriptions[skill].description}</div>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+                {extractedRole && roleSkills.length > 0 && (
+                    <div className="skills-section">
+                        <h3>As a "{extractedRole}", these skills could also be relevant:</h3>
+                        <ul className="skills-list">
+                            {roleSkills.map((skill, index) => (
+                                <li key={`role-skill-${index}`} className="skill-item">
+                                    <div className="skill-content">
+                                        <span>{skill}</span>
+                                        <button className="toggle-description-button" onClick={() => fetchSkillDescription(skill)}>
+                                            {skillDescriptions[skill]?.visible ? 'Show Less' : 'Show More'}
+                                        </button>
+                                    </div>
+                                    {skillDescriptions[skill]?.visible && (
+                                        <div className="skill-description">{skillDescriptions[skill].description}</div>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
